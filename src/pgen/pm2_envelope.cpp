@@ -114,6 +114,7 @@ Real xcom[3], vcom[3]; // cartesian pos/vel of the COM of the particle/gas syste
 Real xgcom[3], vgcom[3]; // cartesian pos/vel of the COM of the gas
 Real lp[3], lg[3], ldo[3];  // particle, gas, and rate of angular momentum loss
 Real Eorb;
+Real sma0; //ARC
 
 Real Omega[3],  Omega_envelope;  // vector rotation of the frame, initial envelope
 
@@ -299,6 +300,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     xi_b[0] = sma*(1.0 + ecc) + GM2a/(GM2a+GM2b)*sma2*(1.0+ecc2);  // apocenter
     xi_b[1] = 0.0;
     xi_b[2] = 0.0;
+	sma0 = sma
     
     //Real vcirc = sqrt((GM1+GM2)/sma + accel*sma);    
     vcirc = sqrt((GM1+GM2a+GM2b+GMenv)/sma);
@@ -593,7 +595,7 @@ Real mr2(MeshBlock *pmb, int iout){
   return mr;
 }
 
-Real m2sep(MeshBlock *pmb, int iout){ //ARC function mass enclosed in two separations sma
+Real m2sep(MeshBlock *pmb, int iout){ //ARC function mass enclosed in two separations sma0
   Real mr = 0.0;
   
   int is=pmb->is, ie=pmb->ie, js=pmb->js, je=pmb->je, ks=pmb->ks, ke=pmb->ke;
@@ -609,7 +611,7 @@ Real m2sep(MeshBlock *pmb, int iout){ //ARC function mass enclosed in two separa
       for(int i=is; i<=ie; i++) {
 	Real dens = pmb->phydro->u(IDN,k,j,i);
 	Real dm = vol(i) * dens;
-	if(pmb->pcoord->x1v(i) <= 2*sma){  //ARC
+	if(pmb->pcoord->x1v(i) <= 2*sma0){  //ARC
 	  mr += dm;
 	}
       }
