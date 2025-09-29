@@ -596,6 +596,7 @@ int RefinementCondition(MeshBlock *pmb)
 {
   Real mindist=1.e99;
   Real rmin = 1.e99;
+  Real loc_comx = 1.e99; //added by ARC
   int inregion = 0;
   for(int k=pmb->ks; k<=pmb->ke; k++){
     Real ph= pmb->pcoord->x3v(k);
