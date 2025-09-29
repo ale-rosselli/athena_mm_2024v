@@ -300,7 +300,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     xi_b[0] = sma*(1.0 + ecc) + GM2a/(GM2a+GM2b)*sma2*(1.0+ecc2);  // apocenter
     xi_b[1] = 0.0;
     xi_b[2] = 0.0;
-	sma0 = sma
+	sma0 = sma;
     
     //Real vcirc = sqrt((GM1+GM2)/sma + accel*sma);    
     vcirc = sqrt((GM1+GM2a+GM2b+GMenv)/sma);
