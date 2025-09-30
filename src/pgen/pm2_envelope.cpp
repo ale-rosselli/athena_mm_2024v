@@ -611,7 +611,8 @@ Real m2sep(MeshBlock *pmb, int iout){ //ARC function mass enclosed in two separa
       for(int i=is; i<=ie; i++) {
 	Real dens = pmb->phydro->u(IDN,k,j,i);
 	Real dm = vol(i) * dens;
-	if(pmb->pcoord->x1v(i) <= 2*sma0){  //ARC
+	//if(pmb->pcoord->x1v(i) <= 2*sma0){  //ARC
+	if(pmb->pcoord->x1v(i) <= 6.0){  //ARC
 	  mr += dm;
 	}
       }
