@@ -93,6 +93,8 @@ Real mr12(MeshBlock *pmb, int iout);
 Real mr15(MeshBlock *pmb, int iout);
 Real mr2(MeshBlock *pmb, int iout);
 Real m2sep(MeshBlock *pmb, int iout); //mass enclosed at 2 ratial separations
+Real m3sep(MeshBlock *pmb, int iout); //mass enclosed at 3 ratial separations
+
 
 
 //Real UpdatePMTimestep(MeshBlock *pmb);
@@ -216,7 +218,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     EnrollUserRefinementCondition(RefinementCondition);
 
   // Enroll extra history output
-  AllocateUserHistoryOutput(8);
+  AllocateUserHistoryOutput(9);
   EnrollUserHistoryOutput(0, mxOmegaEnv, "mxOmegaEnv");
   EnrollUserHistoryOutput(1, mEnv, "mEnv");
   EnrollUserHistoryOutput(2, mr1, "mr1");
@@ -225,6 +227,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   EnrollUserHistoryOutput(5, mr15, "mr15");
   EnrollUserHistoryOutput(6, mr2, "mr2");
   EnrollUserHistoryOutput(7, m2sep, "m2sep");
+  EnrollUserHistoryOutput(8, m3sep, "m3sep");
 
   // always write at startup
   trackfile_next_time = time;
@@ -611,8 +614,35 @@ Real m2sep(MeshBlock *pmb, int iout){ //ARC function mass enclosed in two separa
       for(int i=is; i<=ie; i++) {
 	Real dens = pmb->phydro->u(IDN,k,j,i);
 	Real dm = vol(i) * dens;
-	//if(pmb->pcoord->x1v(i) <= 2*sma0){  //ARC
-	if(pmb->pcoord->x1v(i) <= 6.0){  //ARC
+	if(pmb->pcoord->x1v(i) <= 2*sma0){  //ARC
+	//if(pmb->pcoord->x1v(i) <= 6.0){  //ARC
+	  mr += dm;
+	}
+      }
+    }
+  }
+  
+  return mr;
+}
+
+Real m3sep(MeshBlock *pmb, int iout){ //ARC function mass enclosed in two separations sma0
+  Real mr = 0.0;
+  
+  int is=pmb->is, ie=pmb->ie, js=pmb->js, je=pmb->je, ks=pmb->ks, ke=pmb->ke;
+  AthenaArray<Real> vol;
+  int ncells1 = pmb->block_size.nx1 + 2*(NGHOST);
+  vol.NewAthenaArray(ncells1);
+  
+  for(int k=ks; k<=ke; k++) {
+    for(int j=js; j<=je; j++) {
+      Real th= pmb->pcoord->x2v(j);
+      Real sin_th = sin(th);
+      pmb->pcoord->CellVolume(k,j,pmb->is,pmb->ie,vol);
+      for(int i=is; i<=ie; i++) {
+	Real dens = pmb->phydro->u(IDN,k,j,i);
+	Real dm = vol(i) * dens;
+	if(pmb->pcoord->x1v(i) <= 3*sma0){  //ARC
+	//if(pmb->pcoord->x1v(i) <= 6.0){  //ARC
 	  mr += dm;
 	}
       }
@@ -1125,7 +1155,6 @@ void WritePMTrackfile(Mesh *pm, ParameterInput *pin){
       fprintf(pfile,"vxcom            ");
       fprintf(pfile,"vycom            ");
       fprintf(pfile,"vzcom            ");
-	  fprintf(pfile,"m2sep            "); //ARC
       fprintf(pfile,"\n");
     }
 
@@ -1164,7 +1193,6 @@ void WritePMTrackfile(Mesh *pm, ParameterInput *pin){
     fprintf(pfile,"%20.6e",vcom[0]);
     fprintf(pfile,"%20.6e",vcom[1]);
     fprintf(pfile,"%20.6e",vcom[2]);
-	fprintf(pfile,"%20.6e",m2sep); //ARC
     fprintf(pfile,"\n");
 
     // close the file
