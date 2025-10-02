@@ -701,8 +701,9 @@ int RefinementCondition(MeshBlock *pmb)
 	  }
     }
   }
+  if(rmin < x1_min_derefine)return -1;
   if( (rmin<(sma0+2*smab0)) && phimin <= maxrefine_angle) return 1;
-  if( (phimin > 1.1*maxrefine_angle) && rmin>x1_min_derefine  ) return -1;
+  if( (phimin > 1.1*maxrefine_angle)) return -1;
   return 0;
 	
   // derefine when away from pm & static region
