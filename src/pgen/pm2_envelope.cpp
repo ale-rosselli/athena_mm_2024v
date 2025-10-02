@@ -138,6 +138,7 @@ Real x1_min_derefine;
 bool do_pre_integrate;
 
 Real maxrefine_distance; 
+Real maxrefine_angle; 
 
 //======================================================================================
 //! \fn void Mesh::InitUserMeshData(ParameterInput *pin)
@@ -183,6 +184,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   // x2_max_level1 = pin->GetOrAddReal("problem","x2_max_level1",0.0);
   x1_min_derefine = pin->GetOrAddReal("problem","x1_min_derefine",0.0);
   maxrefine_distance = pin->GetOrAddReal("problem","maxrefine_distance",1.0);
+  maxrefine_angle = pin->GetOrAddReal("problem","maxrefine_angle",1.0);
 
   // local vars
   Real rmin = pin->GetOrAddReal("mesh","x1min",0.0);
