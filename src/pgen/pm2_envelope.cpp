@@ -116,7 +116,8 @@ Real xcom[3], vcom[3]; // cartesian pos/vel of the COM of the particle/gas syste
 Real xgcom[3], vgcom[3]; // cartesian pos/vel of the COM of the gas
 Real lp[3], lg[3], ldo[3];  // particle, gas, and rate of angular momentum loss
 Real Eorb;
-Real sma0; //ARC
+Real sma0; // separation of star to com of binary ARC
+Real smab0; // binary separation ARC
 
 Real Omega[3],  Omega_envelope;  // vector rotation of the frame, initial envelope
 
@@ -304,6 +305,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
     xi_b[1] = 0.0;
     xi_b[2] = 0.0;
 	sma0 = sma;
+	smab0 = sma2;
     
     //Real vcirc = sqrt((GM1+GM2)/sma + accel*sma);    
     vcirc = sqrt((GM1+GM2a+GM2b+GMenv)/sma);
@@ -657,6 +659,7 @@ int RefinementCondition(MeshBlock *pmb)
 {
   Real mindist=1.e99;
   Real rmin = 1.e99;
+  Real phimin = 1.e99;
   Real loc_comx = 1.e99; //added by ARC
   Real loc_comy = 1.e99; //added by ARC
   Real loc_comz = 1.e99; //added by ARC
@@ -692,15 +695,20 @@ int RefinementCondition(MeshBlock *pmb)
 				SQR(z-loc_comz) ); // distance from com of binary added by ARC
 	mindist = std::min(mindist,dist_com);
 	rmin    = std::min(rmin,r);
+	phimin = std::min(phimin,ph);
 	  }
     }
   }
-  // derefine when away from pm & static region
-  if( (mindist > 1.1*maxrefine_distance) && rmin>x1_min_derefine  ) return -1;
-  // refine near point mass 
-  if(mindist <= maxrefine_distance) return 1;
-   // otherwise do nothing
+  if( (rmin<(sma0+2*smab0)) && phimin <= maxrefine_angle) return 1;
+  if( (phimin > 1.1*maxrefine_angle) && rmin>x1_min_derefine  ) return -1;
   return 0;
+	
+  // derefine when away from pm & static region
+  //if( (mindist > 1.1*maxrefine_distance) && rmin>x1_min_derefine  ) return -1;
+  // refine near point mass 
+  //if(mindist <= maxrefine_distance) return 1;
+   // otherwise do nothing
+  //return 0;
 }
 
 
