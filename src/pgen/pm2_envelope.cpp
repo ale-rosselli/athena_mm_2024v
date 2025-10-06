@@ -76,7 +76,6 @@ void SumComPosVel(Mesh *pm,
 		  Real (&vi_a)[3], Real (&vi_b)[3],
 		  Real (&xgcom)[3],Real (&vgcom)[3],
 		  Real (&xcom)[3],Real (&vcom)[3],
-          Real (&phicom)[1],
 		  Real &mg);
 
 //void SumAngularMomentumEnergyDiagnostic(Mesh *pm, Real (&xi)[3],Real (&vi)[3],
