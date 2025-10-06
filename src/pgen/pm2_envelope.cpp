@@ -662,7 +662,7 @@ int RefinementCondition(MeshBlock *pmb)
 {
   Real mindist=1.e99;
   Real rmin = 1.e99;
-  Real phmin = 1.e99;
+  Real phimin = 1.e99;
   Real loc_comx = 1.e99; //added by ARC
   Real loc_comy = 1.e99; //added by ARC
   Real loc_comz = 1.e99; //added by ARC
@@ -709,8 +709,8 @@ int RefinementCondition(MeshBlock *pmb)
 	  }
     }
   }
-  if( (phmin > maxrefine_angle || rmin > maxrefine_distance) && rmin>x1_min_derefine) return -1;
-  if((rmin<=maxrefine_distance) && phmin <= maxrefine_angle) return 1;
+  if( (phimin > maxrefine_angle || rmin > maxrefine_distance) && rmin>x1_min_derefine) return -1;
+  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle) return 1;
   return 0;
 	
   // derefine when away from pm & static region
