@@ -114,7 +114,6 @@ int  n_particle_substeps; // substepping of particle integration
 Real xi_a[3], vi_a[3],xi_b[3], vi_b[3];  // cartesian positions/vels of the secondary objects
 Real agas1i[3], agas2i_a[3], agas2i_b[3]; //  gas->particle acceleration
 Real xcom[3], vcom[3]; // cartesian pos/vel of the COM of the particle/gas system
-Real phicom[1] // phi of CoM of binary added by ARC
 Real xgcom[3], vgcom[3]; // cartesian pos/vel of the COM of the gas
 Real lp[3], lg[3], ldo[3];  // particle, gas, and rate of angular momentum loss
 Real Eorb;
@@ -670,7 +669,7 @@ int RefinementCondition(MeshBlock *pmb)
   Real loc_comz = 1.e99; //added by ARC
   Real dist_com = 1.e99; //added by ARC
   Real phi_com = 1.e99; //added by ARC
-  Real dist_phi = 1.e99 //
+  Real dist_phi = 1.e99; //
   int inregion = 0;
   loc_comx = (GM2a*xi_a[0] + GM2b*xi_b[0])/(GM2a+GM2b); //x center of mass of binary added by ARC
   loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
@@ -701,7 +700,7 @@ int RefinementCondition(MeshBlock *pmb)
         dist_com = std::sqrt(SQR(x-loc_comx) +
 				SQR(y-loc_comy) +
 				SQR(z-loc_comz) ); // distance from com of binary added by ARC 
-		dist_phi = ph-phi_com
+		dist_phi = ph-phi_com;
 		if (dist_phi < 0){
 			dist_phi = dist_phi+pi;
 		}
@@ -711,7 +710,7 @@ int RefinementCondition(MeshBlock *pmb)
 	  }
     }
   }
-  if( (phmin > maxrefine_angle || rmin > maxrefine_distance) && rmin>min_derefine) return -1;
+  if( (phmin > maxrefine_angle || rmin > maxrefine_distance) && rmin>x1_min_derefine) return -1;
   if((rmin<=maxrefine_distance) && phmin <= maxrefine_angle) return 1;
   return 0;
 	
