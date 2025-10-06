@@ -54,9 +54,9 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 
 
 
-void ParticleAccels(Real (&xi_a)[3],Real (&xi_b)[3],Real (&vi_a)[3],Real (&vi_b)[3],Real (&ai_a)[3],Real (&ai_b)[3]);
+void ParticleAccels(Real (&xi_a)[3],Real (&xi_b)[3],Real (&vi_a)[3],Real (&vi_b)[3],Real (&ai_a)[3],Real (&ai_b)[3]); 
 //void ParticleAccelsPreInt(Real GMenv, Real (&xi)[3],Real (&vi)[3],Real (&ai)[3]);
-void SumGasOnParticleAccels(Mesh *pm, Real (&xi_a)[3],Real (&xi_b)[3],Real (&ag1i)[3], Real (&ag2i_a)[3],Real (&ag2i_b)[3]);
+void SumGasOnParticleAccels(Mesh *pm, Real (&xi_a)[3],Real (&xi_b)[3],Real (&ag1i)[3], Real (&ag2i_a)[3],Real (&ag2i_b)[3]); 
 
 void particle_step(Real dt,Real (&xi)[3],Real (&vi)[3],Real (&ai)[3]);
 void kick(Real dt,Real (&xi)[3],Real (&vi)[3],Real (&ai)[3]);
@@ -76,6 +76,7 @@ void SumComPosVel(Mesh *pm,
 		  Real (&vi_a)[3], Real (&vi_b)[3],
 		  Real (&xgcom)[3],Real (&vgcom)[3],
 		  Real (&xcom)[3],Real (&vcom)[3],
+          Real (&phicom)[1],
 		  Real &mg);
 
 //void SumAngularMomentumEnergyDiagnostic(Mesh *pm, Real (&xi)[3],Real (&vi)[3],
@@ -108,16 +109,18 @@ Real GM2a,GM2b, GM1; // point masses
 Real rsoft2; // softening length of PM 2
 Real t_relax,t_mass_on; // time to damp fluid motion, time to turn on M2 over
 int  include_gas_backreaction, corotating_frame; // flags for output, gas backreaction on EOM, frame choice
-int n_particle_substeps; // substepping of particle integration
+int  n_particle_substeps; // substepping of particle integration
 
-Real xi_a[3], vi_a[3],xi_b[3], vi_b[3];  // cartesian positions/vels of the secondary object
+Real xi_a[3], vi_a[3],xi_b[3], vi_b[3];  // cartesian positions/vels of the secondary objects
 Real agas1i[3], agas2i_a[3], agas2i_b[3]; //  gas->particle acceleration
 Real xcom[3], vcom[3]; // cartesian pos/vel of the COM of the particle/gas system
+Real phicom[1] // phi of CoM of binary added by ARC
 Real xgcom[3], vgcom[3]; // cartesian pos/vel of the COM of the gas
 Real lp[3], lg[3], ldo[3];  // particle, gas, and rate of angular momentum loss
 Real Eorb;
 Real sma0; // separation of star to com of binary ARC
 Real smab0; // binary separation ARC
+Real pi = 3.14159265359; //moved by arc to be global
 
 Real Omega[3],  Omega_envelope;  // vector rotation of the frame, initial envelope
 
@@ -255,7 +258,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   
   // need to do a 3D integral to get the gravitational acceleration
   int ntp=300;
-  Real pi = 3.14159265359;
+  //Real pi = 3.14159265359;
   Real dr = (1.0 - rmin)/ntp;
   Real dth = (thmax-thmin)/ntp;
   Real dph = 2*pi/ntp;
@@ -661,12 +664,18 @@ int RefinementCondition(MeshBlock *pmb)
 {
   Real mindist=1.e99;
   Real rmin = 1.e99;
-  Real phimin = 1.e99;
+  Real phmin = 1.e99;
   Real loc_comx = 1.e99; //added by ARC
   Real loc_comy = 1.e99; //added by ARC
   Real loc_comz = 1.e99; //added by ARC
   Real dist_com = 1.e99; //added by ARC
+  Real phi_com = 1.e99; //added by ARC
+  Real dist_phi = 1.e99 //
   int inregion = 0;
+  loc_comx = (GM2a*xi_a[0] + GM2b*xi_b[0])/(GM2a+GM2b); //x center of mass of binary added by ARC
+  loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
+  loc_comz = (GM2a*xi_a[2] + GM2b*xi_b[2])/(GM2a+GM2b); //z center of mass of binary added by ARC
+  phi_com = std::atan(loc_comy/loc_comx)
   for(int k=pmb->ks; k<=pmb->ke; k++){
     Real ph= pmb->pcoord->x3v(k);
     Real sin_ph = sin(ph);
@@ -676,34 +685,34 @@ int RefinementCondition(MeshBlock *pmb)
       Real sin_th = sin(th);
       Real cos_th = cos(th);
       for(int i=pmb->is; i<=pmb->ie; i++) {
-  	Real r = pmb->pcoord->x1v(i);
-  	Real x = r*sin_th*cos_ph;
-  	Real y = r*sin_th*sin_ph;
-  	Real z = r*cos_th;
-  	Real dista = std::sqrt(SQR(x-xi_a[0]) +
+  	    Real r = pmb->pcoord->x1v(i);
+  	    Real x = r*sin_th*cos_ph;
+  	    Real y = r*sin_th*sin_ph;
+  	    Real z = r*cos_th;
+  	    Real dista = std::sqrt(SQR(x-xi_a[0]) +
   			       SQR(y-xi_a[1]) +
   			       SQR(z-xi_a[2]) );
-	Real distb = std::sqrt(SQR(x-xi_b[0]) +
+	    Real distb = std::sqrt(SQR(x-xi_b[0]) +
   			       SQR(y-xi_b[1]) +
   			       SQR(z-xi_b[2]) );
-	Real dist = std::min(dista,distb);
-  	//mindist = std::min(mindist,dist);
-  	//rmin    = std::min(rmin,r);
-	loc_comx = (GM2a*xi_a[0] + GM2b*xi_b[0])/(GM2a+GM2b); //x center of mass of binary added by ARC
-    loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
-	loc_comz = (GM2a*xi_a[2] + GM2b*xi_b[2])/(GM2a+GM2b); //z center of mass of binary added by ARC
-    dist_com = std::sqrt(SQR(x-loc_comx) +
+	    Real dist = std::min(dista,distb);
+  	    //mindist = std::min(mindist,dist);
+  	    //rmin    = std::min(rmin,r);
+        dist_com = std::sqrt(SQR(x-loc_comx) +
 				SQR(y-loc_comy) +
-				SQR(z-loc_comz) ); // distance from com of binary added by ARC
-	mindist = std::min(mindist,dist_com);
-	rmin    = std::min(rmin,r);
-	phimin = std::min(phimin,ph);
+				SQR(z-loc_comz) ); // distance from com of binary added by ARC 
+		dist_phi = ph-phi_com
+		if (dist_phi < 0){
+			dist_phi = dist_phi+pi;
+		}
+	    mindist = std::min(mindist,dist_com);
+	    rmin    = std::min(rmin,r);
+	    phimin = std::min(phimin, dist_phi);
 	  }
     }
   }
-  if(rmin < x1_min_derefine)return -1;
-  if( (rmin<(sma0+2*smab0)) && phimin <= maxrefine_angle) return 1;
-  if( (phimin > 1.1*maxrefine_angle)) return -1;
+  if( (phmin > maxrefine_angle || rmin > maxrefine_distance) && rmin>min_derefine) return -1;
+  if((rmin<=maxrefine_distance) && phmin <= maxrefine_angle) return 1;
   return 0;
 	
   // derefine when away from pm & static region
