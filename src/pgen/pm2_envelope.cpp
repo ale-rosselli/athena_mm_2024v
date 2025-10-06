@@ -663,17 +663,21 @@ int RefinementCondition(MeshBlock *pmb)
   Real mindist=1.e99;
   Real rmin = 1.e99;
   Real phimin = 1.e99;
+  Real thmin = 1.e99;
   Real loc_comx = 1.e99; //added by ARC
   Real loc_comy = 1.e99; //added by ARC
   Real loc_comz = 1.e99; //added by ARC
   Real dist_com = 1.e99; //added by ARC
-  Real phi_com = 1.e99; //added by ARC
+  Real dist_th = 1.e99; //added by ARC
   Real dist_phi = 1.e99; //
   int inregion = 0;
   loc_comx = (GM2a*xi_a[0] + GM2b*xi_b[0])/(GM2a+GM2b); //x center of mass of binary added by ARC
   loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
   loc_comz = (GM2a*xi_a[2] + GM2b*xi_b[2])/(GM2a+GM2b); //z center of mass of binary added by ARC
-  phi_com = std::atan(loc_comy/loc_comx);
+  Real phi_com = std::atan(loc_comy/loc_comx);
+  Real th_com = std::acos(loc_comz/std::sqrt(SQR(loc_comx) +
+  			       SQR(loc_comy) +
+  			       SQR(loc_comz)));
   for(int k=pmb->ks; k<=pmb->ke; k++){
     Real ph= pmb->pcoord->x3v(k);
     Real sin_ph = sin(ph);
@@ -700,17 +704,22 @@ int RefinementCondition(MeshBlock *pmb)
 				SQR(y-loc_comy) +
 				SQR(z-loc_comz) ); // distance from com of binary added by ARC 
 		dist_phi = ph-phi_com;
+		dist_th = th-th_com;
 		if (dist_phi < 0){
 			dist_phi = dist_phi+pi;
 		}
+		if (dist_th < 0){
+			dist_th = dist_th+2*pi;
+		}
 	    mindist = std::min(mindist,dist_com);
 	    rmin    = std::min(rmin,r);
-	    phimin = std::min(phimin, dist_phi);
+	    phimin  = std::min(phimin, dist_phi);
+		thmin   = std::min(thmin, dist_th);
 	  }
     }
   }
-  if( (phimin > maxrefine_angle || rmin > maxrefine_distance) && rmin>x1_min_derefine) return -1;
-  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle && rmin>x1_min_derefine) return 1;
+  if( (phimin > maxrefine_angle || rmin > maxrefine_distance || thmin > maxrefine_angle) && rmin>x1_min_derefine) return -1;
+  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle && thmin <= maxrefine_angle) return 1;
   return 0;
 	
   // derefine when away from pm & static region
