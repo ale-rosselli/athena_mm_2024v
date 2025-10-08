@@ -677,9 +677,10 @@ int RefinementCondition(MeshBlock *pmb)
   loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
   loc_comz = (GM2a*xi_a[2] + GM2b*xi_b[2])/(GM2a+GM2b); //z center of mass of binary added by ARC
   Real phi_com = std::atan(loc_comy/loc_comx);
-  Real th_com = std::acos(loc_comz/std::sqrt(SQR(loc_comx) +
-  			       SQR(loc_comy) +
-  			       SQR(loc_comz)));
+  //Real th_com = std::acos(loc_comz/std::sqrt(SQR(loc_comx) +
+  //			       SQR(loc_comy) +
+  //			       SQR(loc_comz)));
+  th_com = pi/2; //ARC: right now this is fixed
   for(int k=pmb->ks; k<=pmb->ke; k++){
     Real ph= pmb->pcoord->x3v(k);
     Real sin_ph = sin(ph);
