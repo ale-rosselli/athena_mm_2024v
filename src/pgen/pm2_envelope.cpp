@@ -139,7 +139,8 @@ Real x1_min_derefine;
 bool do_pre_integrate;
 
 Real maxrefine_distance; 
-Real maxrefine_angle; 
+Real maxrefine_angle_theta; 
+Real maxrefine_angle_phi; 
 
 //======================================================================================
 //! \fn void Mesh::InitUserMeshData(ParameterInput *pin)
@@ -185,7 +186,8 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   // x2_max_level1 = pin->GetOrAddReal("problem","x2_max_level1",0.0);
   x1_min_derefine = pin->GetOrAddReal("problem","x1_min_derefine",0.0);
   maxrefine_distance = pin->GetOrAddReal("problem","maxrefine_distance",1.0);
-  maxrefine_angle = pin->GetOrAddReal("problem","maxrefine_angle",1.0);
+  maxrefine_angle_theta = pin->GetOrAddReal("problem","maxrefine_angle_theta",1.0);
+  maxrefine_angle_phi = pin->GetOrAddReal("problem","maxrefine_angle_phi",1.0);
 
   // local vars
   Real rmin = pin->GetOrAddReal("mesh","x1min",0.0);
@@ -674,7 +676,7 @@ int RefinementCondition(MeshBlock *pmb)
   loc_comx = (GM2a*xi_a[0] + GM2b*xi_b[0])/(GM2a+GM2b); //x center of mass of binary added by ARC
   loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
   loc_comz = (GM2a*xi_a[2] + GM2b*xi_b[2])/(GM2a+GM2b); //z center of mass of binary added by ARC
-  Real phi_com = std::atan2(loc_comy,loc_comx);
+  Real phi_com = std::atan(loc_comy/loc_comx);
   Real th_com = std::acos(loc_comz/std::sqrt(SQR(loc_comx) +
   			       SQR(loc_comy) +
   			       SQR(loc_comz)));
@@ -705,11 +707,9 @@ int RefinementCondition(MeshBlock *pmb)
 				SQR(z-loc_comz) ); // distance from com of binary added by ARC 
 		dist_phi = ph-phi_com;
 		dist_th = th-th_com;
+		dist_th = std::abs(dist_th);
 		if (dist_phi < 0){
-			dist_phi = dist_phi+pi;
-		}
-		if (dist_th < 0){
-			dist_th = dist_th+2*pi;
+			dist_phi = dist_phi+2*pi;
 		}
 	    mindist = std::min(mindist,dist_com);
 	    rmin    = std::min(rmin,r);
@@ -718,8 +718,8 @@ int RefinementCondition(MeshBlock *pmb)
 	  }
     }
   }
-  if( (phimin > maxrefine_angle || rmin > maxrefine_distance || thmin > maxrefine_angle) && rmin>x1_min_derefine) return -1;
-  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle && thmin <= maxrefine_angle) return 1;
+  if((phimin > maxrefine_angle_phi || rmin > maxrefine_distance || thmin > maxrefine_angle_theta) && rmin>x1_min_derefine) return -1;
+  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle_phi && thmin <= maxrefine_angle_theta && rmin>x1_min_derefine) return 1;
   return 0;
 	
   // derefine when away from pm & static region
