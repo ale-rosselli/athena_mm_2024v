@@ -720,7 +720,7 @@ int RefinementCondition(MeshBlock *pmb)
     }
   }
   if((phimin > maxrefine_angle_phi || rmin > maxrefine_distance || thmin > maxrefine_angle_theta) && rmin>x1_min_derefine) return -1;
-  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle_phi && thmin <= maxrefine_angle_theta && rmin>x1_min_derefine) return 1;
+  if((rmin<=maxrefine_distance) && phimin <= maxrefine_angle_phi && thmin <= maxrefine_angle_theta && rmin>=x1_min_derefine) return 1;
   return 0;
 	
   // derefine when away from pm & static region
