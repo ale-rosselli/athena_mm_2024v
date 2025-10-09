@@ -709,11 +709,12 @@ int RefinementCondition(MeshBlock *pmb)
 		dist_phi = ph-phi_com;
 		dist_th = th-th_com;
 		dist_th = std::abs(dist_th);
-		if (dist_phi < 0){
-			dist_phi = dist_phi+2*pi;
+		dist_phi = std::abs(dist_phi);
+		if (dist_phi > pi){
+			dist_phi = (2*pi)-dist_phi;
 		}
 	    mindist = std::min(mindist,dist_com);
-	    rmin    = std::min(rmin,r);
+	    //rmin    = std::min(rmin,r);
 	    phimin  = std::min(phimin, dist_phi);
 		thmin   = std::min(thmin, dist_th);
 	  }
