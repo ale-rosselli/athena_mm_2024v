@@ -680,7 +680,7 @@ int RefinementCondition(MeshBlock *pmb)
   //Real th_com = std::acos(loc_comz/std::sqrt(SQR(loc_comx) +
   //			       SQR(loc_comy) +
   //			       SQR(loc_comz)));
-  th_com = pi/2; //ARC: right now this is fixed
+  Real th_com = pi/2; //ARC: right now this is fixed
   for(int k=pmb->ks; k<=pmb->ke; k++){
     Real ph= pmb->pcoord->x3v(k);
     Real sin_ph = sin(ph);
