@@ -1566,7 +1566,7 @@ void SumComPosVel(Mesh *pm,
 			  pow(z-xi_b[2], 2) );
 
 		
-	  Real GMenc1 = Ggrav*Interpolate1DArrayEven(logr,menc, log10(r));
+	  Real GMenc1 = Ggrav*Interpolate1DArrayEven(rad,menc, r);
 	  Real h = gamma_gas * pmb->phydro->w(IPR,k,j,i)/((gamma_gas-1.0)*pmb->phydro->u(IDN,k,j,i));
 	  Real epot = -GMenc1*pmb->pcoord->coord_src1_i_(i) - GM2a*pspline(d2a,rsoft2)  - GM2b*pspline(d2b,rsoft2);
 	  Real ek = 0.5*(SQR(vgas[0]-vcom[0]) +SQR(vgas[1]-vcom[1]) +SQR(vgas[2]-vcom[2]));
