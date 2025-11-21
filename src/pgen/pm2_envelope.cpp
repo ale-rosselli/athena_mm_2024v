@@ -1148,7 +1148,7 @@ void Mesh::MeshUserWorkInLoop(ParameterInput *pin){
   
   // write the output to the trackfile
   if(time >= trackfile_next_time){
-    SumComPosVel(pm, xi_a,xi_b, vi_a,vi_b, xgcom, vgcom, xcom, vcom, mg);
+    SumComPosVel(pm, xi_a,xi_b, vi_a,vi_b, xgcom, vgcom, xcom, vcom, mg, mb, mu);
     WritePMTrackfile(pm,pin);
   }
 
