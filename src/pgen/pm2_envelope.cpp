@@ -77,7 +77,7 @@ void SumComPosVel(Mesh *pm,
 		  Real (&vi_a)[3], Real (&vi_b)[3],
 		  Real (&xgcom)[3],Real (&vgcom)[3],
 		  Real (&xcom)[3],Real (&vcom)[3],
-		  Real &mg);
+		  Real &mg, Real &mb, Real &mu);
 
 //void SumAngularMomentumEnergyDiagnostic(Mesh *pm, Real (&xi)[3],Real (&vi)[3],
 //				     Real (&xgcom)[3],Real (&vgcom)[3],
@@ -1467,7 +1467,7 @@ void SumComPosVel(Mesh *pm,
 		  Real (&vi_a)[3], Real (&vi_b)[3],
 		  Real (&xgcom)[3],Real (&vgcom)[3],
 		  Real (&xcom)[3],Real (&vcom)[3],
-		  Real &mg){
+		  Real &mg, Real &mb, Real &mu){
 
    mg = 0.0;
    mb = 0.0; //bound mass added by arc
