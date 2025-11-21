@@ -37,6 +37,7 @@
 #include "../mesh/mesh.hpp"
 #include "../bvals/bvals.hpp"
 #include "../utils/utils.hpp"
+#include "../scalars/scalars.hpp"
 
 
 
@@ -84,6 +85,7 @@ void SumComPosVel(Mesh *pm,
 //					Real (&lp)[3],Real (&lg)[3],Real (&ldo)[3], Real &Eorb);
 
 Real fspline(Real r, Real eps);
+Real pspline(Real r, Real eps); //added by arc
 
 Real mxOmegaEnv(MeshBlock *pmb, int iout);
 Real mEnv(MeshBlock *pmb, int iout);
@@ -234,6 +236,12 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   EnrollUserHistoryOutput(6, mr2, "mr2");
   EnrollUserHistoryOutput(7, m2sep, "m2sep");
   EnrollUserHistoryOutput(8, m3sep, "m3sep");
+
+
+  // Check the scalar count
+  if(NSCALARS != 1){
+    std::cout<<"COMPILED WITH "<<NSCALARS<<" SCALARS but 1 is required!!!";
+  }
 
   // always write at startup
   trackfile_next_time = time;
@@ -985,6 +993,13 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin)
 	phydro->u(IEN,k,j,i) += 0.5*(SQR(phydro->u(IM1,k,j,i))+SQR(phydro->u(IM2,k,j,i))
 				     + SQR(phydro->u(IM3,k,j,i)))/phydro->u(IDN,k,j,i);
 
+	// set the scalar added by ARC
+	if(r<rstar_initial){
+	  pscalars->s(0,k,j,i) = 1.0*phydro->u(IDN,k,j,i);
+	}else{
+	  pscalars->s(0,k,j,i) = 1.e-30*phydro->u(IDN,k,j,i);
+	}
+
       }
     }
   } // end loop over cells
@@ -1014,12 +1029,14 @@ void MeshBlock::UserWorkInLoop(void)
 
     for (int k=ks; k<=ke; k++) {
       for (int j=js; j<=je; j++) {
-	for (int i=is; i<=ie; i++) {
+	   for (int i=is; i<=ie; i++) {
 
 	  Real den = phydro->u(IDN,k,j,i);
 	  Real vr  = phydro->u(IM1,k,j,i) / den;
 	  Real vth = phydro->u(IM2,k,j,i) / den;
 	  Real vph = phydro->u(IM3,k,j,i) / den;
+	  //Real GMenc1 = Ggrav*Interpolate1DArrayEven(logr,menc,log10(r)); //added by ARC
+	  //pscalars->s(7,k,j,i) = GMenc1*pcoord->coord_src1_i_(i)*den; // neg epot ADDED BY ARC
 	  
 	  Real a_damp_r =  - vr/tau;
 	  Real a_damp_th = - vth/tau;
@@ -1031,7 +1048,7 @@ void MeshBlock::UserWorkInLoop(void)
 	  
 	  phydro->u(IEN,k,j,i) += dt*den*a_damp_r*vr + dt*den*a_damp_th*vth + dt*den*a_damp_ph*vph; 
 	  
-	}
+	   }
       }
     } // end loop over cells                   
   } // end relax
@@ -1453,6 +1470,8 @@ void SumComPosVel(Mesh *pm,
 		  Real &mg){
 
    mg = 0.0;
+   mb = 0.0; //bound mass added by arc
+   mu = 0.0; //unbound mass added by arc
    Real m1 = GM1/Ggrav;
    Real m2a = GM2a/Ggrav;
    Real m2b = GM2b/Ggrav;
@@ -1524,6 +1543,27 @@ void SumComPosVel(Mesh *pm,
 	  vgcom[1] += dm*vgas[1];
 	  vgcom[2] += dm*vgas[2];
 
+
+
+
+	  // energies
+	  Real d2 = std::sqrt(SQR(x-xi[0]) +
+			      SQR(y-xi[1]) +
+			      SQR(z-xi[2]) );
+	  Real GMenc1 = Ggrav*Interpolate1DArrayEven(logr,menc, log10(r));
+	  Real h = gamma_gas * pmb->phydro->w(IPR,k,j,i)/((gamma_gas-1.0)*pmb->phydro->u(IDN,k,j,i));
+	  Real epot = -GMenc1*pmb->pcoord->coord_src1_i_(i) - GM2a*pspline(d2a,rsoft2)  - GM2b*pspline(d2b,rsoft2);
+	  Real ek = 0.5*(SQR(vgas[0]-vcom[0]) +SQR(vgas[1]-vcom[1]) +SQR(vgas[2]-vcom[2]));
+	  Real bern = h+ek+epot;
+		
+	  // bound/unbound mass outside of the star (weighted with scalar)
+	  if ( instar(phyd->u(IDN,k,j,i),r)==false ) {
+	    if (bern < 0.0){
+	      mb += dm*pmb->pscalars->r(0,k,j,i);
+	    }else{
+	      mu += dm*pmb->pscalars->r(0,k,j,i);
+	    }
+	  }
 	  
 	}
       }
@@ -1668,6 +1708,19 @@ Real fspline(Real r, Real eps){
   }
 
 }
+
+Real pspline(Real r, Real eps){
+  Real u = r/eps;
+  if (u<1.0){
+    return -2/eps *(1./3.*pow(u,2) -0.15*pow(u,4) + 0.05*pow(u,5)) +7./(5.*eps);
+  } else if(u<2.0){
+    return -1./(15.*r) - 1/eps*( 4./3.*pow(u,2) - pow(u,3) + 0.3*pow(u,4) -1./30.*pow(u,5)) + 8./(5.*eps);
+  } else{
+    return 1/r;
+  }
+
+}
+
 
 void cross(Real (&A)[3],Real (&B)[3],Real (&AxB)[3]){
   // set the vector AxB = A x B
