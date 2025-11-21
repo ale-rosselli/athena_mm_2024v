@@ -994,7 +994,7 @@ void MeshBlock::ProblemGenerator(ParameterInput *pin)
 				     + SQR(phydro->u(IM3,k,j,i)))/phydro->u(IDN,k,j,i);
 
 	// set the scalar added by ARC
-	if(r<rstar_initial){
+	if(r<1){
 	  pscalars->s(0,k,j,i) = 1.0*phydro->u(IDN,k,j,i);
 	}else{
 	  pscalars->s(0,k,j,i) = 1.e-30*phydro->u(IDN,k,j,i);
@@ -1073,7 +1073,7 @@ void MeshBlock::UserWorkInLoop(void)
 void Mesh::MeshUserWorkInLoop(ParameterInput *pin){
 
   Real ai_a[3],ai_b[3];
-  Real mg;
+  Real mg, mb, mu;
   Mesh *pm = my_blocks(0)->pmy_mesh;
 
   // ONLY ON THE FIRST CALL TO THIS FUNCTION
@@ -1543,13 +1543,29 @@ void SumComPosVel(Mesh *pm,
 	  vgcom[1] += dm*vgas[1];
 	  vgcom[2] += dm*vgas[2];
 
-
+	  // enclosed mass within different conditions
+	  if(instar(phyd->u(IDN,k,j,i),r)==true){
+	    M_star += dm;
+	  }
 
 
 	  // energies
-	  Real d2 = std::sqrt(SQR(x-xi[0]) +
-			      SQR(y-xi[1]) +
-			      SQR(z-xi[2]) );
+	  //Real d2 = std::sqrt(SQR(x-xi[0]) +
+	  //		      SQR(y-xi[1]) +
+	  //		      SQR(z-xi[2]) );
+	  Real d2=sqrt(pow(x-x_2, 2) +
+		       pow(y-y_2, 2) +
+		       pow(z-z_2, 2) );
+
+	  // current position of the secondary
+	  Real d2a = sqrt(pow(x-xi_a[0], 2) +
+			  pow(y-xi_a[1], 2) +
+			  pow(z-xi_a[2], 2) );
+	  Real d2b = sqrt(pow(x-xi_b[0], 2) +
+			  pow(y-xi_b[1], 2) +
+			  pow(z-xi_b[2], 2) );
+
+		
 	  Real GMenc1 = Ggrav*Interpolate1DArrayEven(logr,menc, log10(r));
 	  Real h = gamma_gas * pmb->phydro->w(IPR,k,j,i)/((gamma_gas-1.0)*pmb->phydro->u(IDN,k,j,i));
 	  Real epot = -GMenc1*pmb->pcoord->coord_src1_i_(i) - GM2a*pspline(d2a,rsoft2)  - GM2b*pspline(d2b,rsoft2);
@@ -1727,4 +1743,8 @@ void cross(Real (&A)[3],Real (&B)[3],Real (&AxB)[3]){
   AxB[0] = A[1]*B[2] - A[2]*B[1];
   AxB[1] = A[2]*B[0] - A[0]*B[2];
   AxB[2] = A[0]*B[1] - A[1]*B[0];
+}
+
+bool instar(Real den, Real r){
+  return ((den>1.e-3*1/pow(1,3) ) & (r<2*1));
 }
