@@ -86,6 +86,7 @@ void SumComPosVel(Mesh *pm,
 
 Real fspline(Real r, Real eps);
 Real pspline(Real r, Real eps); //added by arc
+bool instar(Real den, Real r); //added by arc
 
 Real mxOmegaEnv(MeshBlock *pmb, int iout);
 Real mEnv(MeshBlock *pmb, int iout);
@@ -1544,9 +1545,9 @@ void SumComPosVel(Mesh *pm,
 	  vgcom[2] += dm*vgas[2];
 
 	  // enclosed mass within different conditions
-	  if(instar(phyd->u(IDN,k,j,i),r)==true){
-	    M_star += dm;
-	  }
+	  //if(instar(phyd->u(IDN,k,j,i),r)==true){
+	  //  M_star += dm;
+	  //}
 
 
 	  // energies
