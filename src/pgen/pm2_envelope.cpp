@@ -1554,9 +1554,9 @@ void SumComPosVel(Mesh *pm,
 	  //Real d2 = std::sqrt(SQR(x-xi[0]) +
 	  //		      SQR(y-xi[1]) +
 	  //		      SQR(z-xi[2]) );
-	  Real d2=sqrt(pow(x-x_2, 2) +
-		       pow(y-y_2, 2) +
-		       pow(z-z_2, 2) );
+	  //Real d2=sqrt(pow(x-x_2, 2) +
+	  //	       pow(y-y_2, 2) +
+	  //	       pow(z-z_2, 2) );
 
 	  // current position of the secondary
 	  Real d2a = sqrt(pow(x-xi_a[0], 2) +
