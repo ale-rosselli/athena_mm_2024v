@@ -964,7 +964,7 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	  //Real Hp = std::abs(prim(IPR,k,j,i)/( (prim(IPR,k,j,i+1)-prim(IPR,k,j,i-1))/(pmb->pcoord->x1v(i+1)-pmb->pcoord->x1v(i-1)) ));
 	  //Hp = std::max(Hp,pmb->pcoord->x1v(i+1)-pmb->pcoord->x1v(i-1) );
 	  
-	  Real Sigma = std::max(denr0*rstar_initial,mH);
+	  Real Sigma = std::max(denr0,mH);
     
 	  
 	  Real mu = 0.61;
