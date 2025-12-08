@@ -145,6 +145,16 @@ Real maxrefine_distance;
 Real maxrefine_angle_theta; 
 Real maxrefine_angle_phi; 
 
+bool cooling; // whether to apply cooling function or not
+Real Lstar; // stellar luminosity
+Real mykappa;
+Real fvir;
+
+Real sigmaSB = 5.67051e-5; //erg / cm^2 / K^4
+Real kB = 1.380658e-16; // erg / K
+Real mH = 1.6733e-24; // g
+Real X,Y,Z; // mass fractions composition
+
 //======================================================================================
 //! \fn void Mesh::InitUserMeshData(ParameterInput *pin)
 //  \brief Function to initialize problem-specific data in mesh class.  Can also be used
@@ -204,6 +214,18 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   Real ecc2 = pin->GetOrAddReal("problem","ecc2",0.0);
   Real fcorot = pin->GetOrAddReal("problem","fcorotation",0.0);
   Real Omega_orb, vcirc;
+
+
+  // cooling parameters
+  cooling = pin->GetOrAddBoolean("problem","cooling",false);
+  Lstar = pin->GetOrAddReal("problem","lstar",4.e33);
+  mykappa = pin->GetOrAddReal("problem","kappa",1e-3);
+  fvir = pin->GetOrAddReal("problem","fvir",0.1);
+
+
+  
+
+
 
   // allocate MESH data for the particle pos/vel, Omega frame
   AllocateRealUserMeshDataField(5);
@@ -417,6 +439,8 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
       std::cout << "vxb ="<<vi_b[0]<<"\n";
       std::cout << "vyb ="<<vi_b[1]<<"\n";
       std::cout << "vzb ="<<vi_b[2]<<"\n";
+      std::cout << "==========================================================\n";
+	  std::cout << "cooling = " << cooling <<"\n";
       std::cout << "==========================================================\n";
     }
   }
@@ -918,6 +942,43 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	//cons(IEN,k,j,i) += src_2/den * 0.5*(flux[X2DIR](IDN,k,j,i) + flux[X2DIR](IDN,k,j+1,i)); //not sure why this seg-faults
 	//cons(IEN,k,j,i) += src_3/den * 0.5*(flux[X3DIR](IDN,k,j,i) + flux[X3DIR](IDN,k+1,j,i));
 	cons(IEN,k,j,i) += src_2*prim(IVY,k,j,i) + src_3*prim(IVZ,k,j,i);
+
+		  
+
+    // APPLY LOCAL COOLING FUNCTION
+	if(cooling){
+	  Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
+	  //Real Hp = std::abs(prim(IPR,k,j,i)/( (prim(IPR,k,j,i+1)-prim(IPR,k,j,i-1))/(pmb->pcoord->x1v(i+1)-pmb->pcoord->x1v(i-1)) ));
+	  //Hp = std::max(Hp,pmb->pcoord->x1v(i+1)-pmb->pcoord->x1v(i-1) );
+	  
+	  Real Sigma = std::max(denr0*rstar_initial,mH);
+    
+	  
+	  Real mu = 0.61;
+	  Real Temp = prim(IPR,k,j,i) * mu * mH / (den * kB);
+	  Real Teq = fvir*GMenc1*mu*mH/(kB*r);  //pow( Lstar/(4*PI*sigmaSB*r*r), 0.25); // equilibrium temperature
+
+	  Real kap = kappa(den,Temp);
+	  Real tau = Sigma*kap;	  
+	  
+	  Real ueq = kB*Teq/(mu*mH*(gamma_gas-1));  // erg/g
+	  Real u = prim(IPR,k,j,i)/(den*(gamma_gas-1)); // erg/g
+	  	  
+	  Real dudt = 4.0*sigmaSB*( pow(Teq,4) - pow(Temp,4))/(Sigma*tau + 1/kap);  //erg/g/s
+	  Real t_therm = std::max( std::abs((ueq-u)/dudt) , 10.0*(pmb->pmy_mesh->dt) );
+	  
+	  Real exp_step = 1.0 - exp(-(pmb->pmy_mesh->dt) / t_therm);
+	  
+	  //std::cout<<"r="<<r<<"  tau="<<tau<<"  Temp="<<Temp<<"  Teq="<<Teq<<"  t_therm="<<t_therm<<"  exp="<<exp_step<<"\n";
+	  
+	  cons(IEN,k,j,i) +=  denr0*(ueq-u)*exp_step;
+
+	    
+	} // end coooling
+
+
+
+		  
 
       }
     }
