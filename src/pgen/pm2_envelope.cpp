@@ -789,6 +789,19 @@ Real GetGM2factor(Real time){
   return GM2_factor;
 }
 
+/// Cooling functions
+Real kappa(Real rho, Real T)
+{
+  // From G. Knapp A403 Princeton Course Notes
+  //Real Kes = 0.2*(1.0+X);
+  //Real Ke = 0.2*(1.0+X)/((1.0+2.7e11*rho/(T*T))*(1.0+ pow((T/4.5e8),0.86) ));
+  //Real Kk = 4.e25*(1+X)*(Z+1.e-3)*rho*pow(T,-3.5);
+  //Real Khm = 1.1e-25*sqrt(Z) *sqrt(rho) * pow(T,7.7);
+  //Real Km = 0.1*Z;
+  // Real Krad = Km + 1.0/(1.0/Khm + 1.0/(Ke+Kk) );
+  //return Krad;
+  return mykappa;
+}
 
 
 // Source Function for two point masses
