@@ -150,6 +150,11 @@ Real Lstar; // stellar luminosity
 Real mykappa;
 Real fvir;
 
+Real den_crit;
+Real slope_tcool;
+Real t_min;
+Real t_max;
+
 Real sigmaSB = 5.67051e-5; //erg / cm^2 / K^4
 Real kB = 1.380658e-16; // erg / K
 Real mH = 1.6733e-24; // g
@@ -222,6 +227,11 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   mykappa = pin->GetOrAddReal("problem","kappa",1e-3);
   fvir = pin->GetOrAddReal("problem","fvir",0.1);
 
+  //TO ADD TOMORROW
+  den_crit
+  slope_tcool
+  t_min
+  t_max 
 
   
 
@@ -803,6 +813,13 @@ Real kappa(Real rho, Real T)
   return mykappa;
 }
 
+Real t_cool_function(Real denr0) //ARC density cooling function
+{
+	Real tanh = std::tanh(pow(denr0/den_crit), slope_tcool);
+	Real t_cool = (t_max-t_min)*tanh + t_min;
+	return t_cool;
+}
+
 
 // Source Function for two point masses
 void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaArray<Real> *flux,
@@ -958,12 +975,20 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 
 		  
 
-    // APPLY LOCAL COOLING FUNCTION
+    // APPLY LOCAL COOLING FUNCTION ARC
 	if(cooling){
 	  Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
-	  //Real Hp = std::abs(prim(IPR,k,j,i)/( (prim(IPR,k,j,i+1)-prim(IPR,k,j,i-1))/(pmb->pcoord->x1v(i+1)-pmb->pcoord->x1v(i-1)) ));
-	  //Hp = std::max(Hp,pmb->pcoord->x1v(i+1)-pmb->pcoord->x1v(i-1) );
-	  
+
+	  Real t_cool = t_cool_function(denr0);
+
+	  Real cs_eq = c_sound_eq(x,y,z);
+		
+
+      Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
+      Real dP = (P_eq - prim(IPR,k,j,i))*(1.0 - exp(-(pmb->pmy_mesh->dt) / t_cool) );
+	  cons(IEN,k,j,i) +=  dP/(gamma_gas-1);
+	} // end coooling
+		
 	  Real Sigma = std::max(denr0,mH);
     
 	  
