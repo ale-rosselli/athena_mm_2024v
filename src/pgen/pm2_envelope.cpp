@@ -146,19 +146,13 @@ Real maxrefine_angle_theta;
 Real maxrefine_angle_phi; 
 
 bool cooling; // whether to apply cooling function or not
-Real Lstar; // stellar luminosity
-Real mykappa;
-Real fvir;
 
 Real den_crit;
 Real slope_tcool;
 Real t_min;
 Real t_max;
+Real h;
 
-Real sigmaSB = 5.67051e-5; //erg / cm^2 / K^4
-Real kB = 1.380658e-16; // erg / K
-Real mH = 1.6733e-24; // g
-Real X,Y,Z; // mass fractions composition
 
 //======================================================================================
 //! \fn void Mesh::InitUserMeshData(ParameterInput *pin)
@@ -223,15 +217,13 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
 
   // cooling parameters
   cooling = pin->GetOrAddBoolean("problem","cooling",false);
-  Lstar = pin->GetOrAddReal("problem","lstar",4.e33);
-  mykappa = pin->GetOrAddReal("problem","kappa",1e-3);
-  fvir = pin->GetOrAddReal("problem","fvir",0.1);
-
-  //TO ADD TOMORROW
-  den_crit
-  slope_tcool
-  t_min
-  t_max 
+	
+  //ADDED BY ARC
+  den_crit = pin->GetOrAddReal("problem","den_crit",4.e33);
+  slope_tcool = pin->GetOrAddReal("problem","slope_tcool",0.3); //must be between 0 and 1, with increasing slope
+  t_min = pin->GetOrAddReal("problem","t_min",4.e33);
+  t_max = pin->GetOrAddReal("problem","t_max",4.e33);
+  h = pin->GetOrAddReal("problem","h",2);
 
   
 
@@ -800,24 +792,21 @@ Real GetGM2factor(Real time){
 }
 
 /// Cooling functions
-Real kappa(Real rho, Real T)
-{
-  // From G. Knapp A403 Princeton Course Notes
-  //Real Kes = 0.2*(1.0+X);
-  //Real Ke = 0.2*(1.0+X)/((1.0+2.7e11*rho/(T*T))*(1.0+ pow((T/4.5e8),0.86) ));
-  //Real Kk = 4.e25*(1+X)*(Z+1.e-3)*rho*pow(T,-3.5);
-  //Real Khm = 1.1e-25*sqrt(Z) *sqrt(rho) * pow(T,7.7);
-  //Real Km = 0.1*Z;
-  // Real Krad = Km + 1.0/(1.0/Khm + 1.0/(Ke+Kk) );
-  //return Krad;
-  return mykappa;
-}
 
 Real t_cool_function(Real denr0) //ARC density cooling function
 {
 	Real tanh = std::tanh(pow(denr0/den_crit), slope_tcool);
 	Real t_cool = (t_max-t_min)*tanh + t_min;
 	return t_cool;
+}
+
+Real c_sound_eq(Real r) //ARC equilibrium sound speed function
+{
+	Real vk = std::sqrt((GM2a+GM2b) / r); //if i want second order correction, take 3*GM2a*GM2b*a^2/(2*r^3)
+
+	Real cs_eq  = h*vk;
+
+	return cs_eq;
 }
 
 
@@ -978,10 +967,11 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
     // APPLY LOCAL COOLING FUNCTION ARC
 	if(cooling){
 	  Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
+	  Real r = pcoord->x1v(i);
 
 	  Real t_cool = t_cool_function(denr0);
 
-	  Real cs_eq = c_sound_eq(x,y,z);
+	  Real cs_eq = c_sound_eq(r);
 		
 
       Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
@@ -989,30 +979,8 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	  cons(IEN,k,j,i) +=  dP/(gamma_gas-1);
 	} // end coooling
 		
-	  Real Sigma = std::max(denr0,mH);
-    
-	  
-	  Real mu = 0.61;
-	  Real Temp = prim(IPR,k,j,i) * mu * mH / (den * kB);
-	  Real Teq = fvir*GMenc1*mu*mH/(kB*r);  //pow( Lstar/(4*PI*sigmaSB*r*r), 0.25); // equilibrium temperature
-
-	  Real kap = kappa(den,Temp);
-	  Real tau = Sigma*kap;	  
-	  
-	  Real ueq = kB*Teq/(mu*mH*(gamma_gas-1));  // erg/g
-	  Real u = prim(IPR,k,j,i)/(den*(gamma_gas-1)); // erg/g
-	  	  
-	  Real dudt = 4.0*sigmaSB*( pow(Teq,4) - pow(Temp,4))/(Sigma*tau + 1/kap);  //erg/g/s
-	  Real t_therm = std::max( std::abs((ueq-u)/dudt) , 10.0*(pmb->pmy_mesh->dt) );
-	  
-	  Real exp_step = 1.0 - exp(-(pmb->pmy_mesh->dt) / t_therm);
-	  
-	  //std::cout<<"r="<<r<<"  tau="<<tau<<"  Temp="<<Temp<<"  Teq="<<Teq<<"  t_therm="<<t_therm<<"  exp="<<exp_step<<"\n";
-	  
-	  cons(IEN,k,j,i) +=  denr0*(ueq-u)*exp_step;
 
 	    
-	} // end coooling
 
 
 
