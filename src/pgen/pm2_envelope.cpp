@@ -219,10 +219,10 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   cooling = pin->GetOrAddBoolean("problem","cooling",false);
 	
   //ADDED BY ARC
-  den_crit = pin->GetOrAddReal("problem","den_crit",4.e33);
+  den_crit = pin->GetOrAddReal("problem","den_crit",1.e-4);
   slope_tcool = pin->GetOrAddReal("problem","slope_tcool",0.3); //must be between 0 and 1, with increasing slope
-  t_min = pin->GetOrAddReal("problem","t_min",4.e33);
-  t_max = pin->GetOrAddReal("problem","t_max",4.e33);
+  t_min = pin->GetOrAddReal("problem","t_min",0.0);
+  t_max = pin->GetOrAddReal("problem","t_max",1.0);
   h = pin->GetOrAddReal("problem","h",0.05);
 
   
