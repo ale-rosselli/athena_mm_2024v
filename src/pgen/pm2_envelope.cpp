@@ -795,7 +795,7 @@ Real GetGM2factor(Real time){
 
 Real t_cool_function(Real denr0) //ARC density cooling function
 {
-	Real tanh = std::tanh(pow(denr0/den_crit), slope_tcool);
+	Real tanh = std::tanh(pow((denr0/den_crit), slope_tcool));
 	Real t_cool = (t_max-t_min)*tanh + t_min;
 	return t_cool;
 }
