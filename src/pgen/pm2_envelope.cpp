@@ -223,7 +223,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   slope_tcool = pin->GetOrAddReal("problem","slope_tcool",0.3); //must be between 0 and 1, with increasing slope
   t_min = pin->GetOrAddReal("problem","t_min",4.e33);
   t_max = pin->GetOrAddReal("problem","t_max",4.e33);
-  h = pin->GetOrAddReal("problem","h",2);
+  h = pin->GetOrAddReal("problem","h",0.05);
 
   
 
