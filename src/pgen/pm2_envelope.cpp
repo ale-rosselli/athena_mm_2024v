@@ -967,7 +967,7 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
     // APPLY LOCAL COOLING FUNCTION ARC
 	if(cooling){
 	  Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
-	  Real r = ppmb->pcoord->x1v(i);
+	  Real r = pmb->pcoord->x1v(i);
 
 	  Real t_cool = t_cool_function(denr0);
 
