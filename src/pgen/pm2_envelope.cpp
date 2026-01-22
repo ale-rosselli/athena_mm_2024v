@@ -152,6 +152,7 @@ Real slope_tcool;
 Real t_min;
 Real t_max;
 Real h;
+Real cooling_radius;
 
 
 //======================================================================================
@@ -224,6 +225,7 @@ void Mesh::InitUserMeshData(ParameterInput *pin)
   t_min = pin->GetOrAddReal("problem","t_min",0.0);
   t_max = pin->GetOrAddReal("problem","t_max",1.0);
   h = pin->GetOrAddReal("problem","h",0.05);
+  cooling_radius = pin->GetOrAddReal("problem","cooling_radius",1.0);
 
   
 
@@ -971,7 +973,7 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 		
 	  Real t_cool = t_max;
 		
-	  if (r > 1){
+	  if (r > cooling_radius){
 		  Real t_cool = t_cool_function(denr0);
 	  }
 
