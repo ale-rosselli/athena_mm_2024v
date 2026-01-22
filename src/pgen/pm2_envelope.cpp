@@ -974,7 +974,7 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	  Real t_cool = t_max;
 		
 	  if (r > cooling_radius){
-		  Real t_cool = t_cool_function(denr0);
+		  t_cool = t_cool_function(denr0);
 	  }
 
 	  Real cs_eq = c_sound_eq(r);
