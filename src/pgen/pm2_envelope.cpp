@@ -795,9 +795,9 @@ Real GetGM2factor(Real time){
 
 /// Cooling functions
 
-Real t_cool_function(Real denr0) //ARC density cooling function
+Real t_cool_function(Real den) //ARC density cooling function
 {
-	Real tanh = std::tanh(pow((denr0/den_crit), slope_tcool));
+	Real tanh = std::tanh(pow((den/den_crit), slope_tcool));
 	Real t_cool = (t_max-t_min)*tanh + t_min;
 	return t_cool;
 }
@@ -968,23 +968,25 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 
     // APPLY LOCAL COOLING FUNCTION ARC
 	if(cooling){
-	  Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
-	  Real r = pmb->pcoord->x1v(i);
-		
 	  Real t_cool = t_max;
-		
-	  if (r > cooling_radius){
-		  t_cool = t_cool_function(denr0);
-	  }else {
+      if (pmb->pscalars->r(0,k,j,i) < 0.2){
 		  t_cool = t_max;
-	  }
-
-	  Real cs_eq = c_sound_eq(r);
+	  }else{
+		  Real r = pmb->pcoord->x1v(i);
 		
-
-      Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
-      Real dP = (P_eq - prim(IPR,k,j,i))*(1.0 - exp(-(pmb->pmy_mesh->dt) / t_cool) );
-	  cons(IEN,k,j,i) +=  dP/(gamma_gas-1);
+		  if (r > cooling_radius){
+			  t_cool = t_cool_function(den);
+		  }else {
+			  t_cool = t_max;
+		  }
+	
+		  Real cs_eq = c_sound_eq(r);
+	
+	      Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
+	      Real dP = (P_eq - prim(IPR,k,j,i))*(1.0 - exp(-(pmb->pmy_mesh->dt) / t_cool) );
+		  cons(IEN,k,j,i) +=  dP/(gamma_gas-1);
+	  }
+	  //Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
 	} // end coooling
 		
 
