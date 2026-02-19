@@ -802,11 +802,11 @@ Real t_cool_function(Real den) //ARC density cooling function
 	return t_cool;
 }
 
-Real c_sound_eq(Real r) //ARC equilibrium sound speed function
+Real c_sound_eq(Real r_com, Real r_a, Real r_b) //ARC equilibrium sound speed function
 {
-	Real vk = std::sqrt((GM2a+GM2b) / r); //if i want second order correction, take 3*GM2a*GM2b*a^2/(2*r^3)
+	Real vk = std::sqrt(r_com*(GM2a/(r_a*r_a))) + std::sqrt(r_com*(GM2b/(r_b*r_b))); // before  =sqrt((Gm2a+GM2b)/r)
 
-	Real cs_eq  = h*vk;
+	Real cs_eq  = h*vk; 
 
 	return cs_eq;
 }
@@ -980,7 +980,7 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 			  t_cool = t_max;
 		  }
 	
-		  Real cs_eq = c_sound_eq(r);
+		  Real cs_eq = c_sound_eq(r_com, r_a, r_b);
 	
 	      Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
 	      Real dP = (P_eq - prim(IPR,k,j,i))*(1.0 - exp(-(pmb->pmy_mesh->dt) / t_cool) );
