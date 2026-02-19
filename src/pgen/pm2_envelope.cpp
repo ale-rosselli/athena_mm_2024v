@@ -979,7 +979,15 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 		  }else {
 			  t_cool = t_max;
 		  }
-	
+
+		  Real loc_comx = (GM2a*xi_a[0] + GM2b*xi_b[0])/(GM2a+GM2b); //x center of mass of binary added by ARC
+          Real loc_comy = (GM2a*xi_a[1] + GM2b*xi_b[1])/(GM2a+GM2b); //y center of mass of binary added by ARC
+          Real loc_comz = (GM2a*xi_a[2] + GM2b*xi_b[2])/(GM2a+GM2b); //z center of mass of binary added by ARC
+
+		  Real r_com = std::sqrt(std::pow(loc_comx-x,2)+std::pow(loc_comy-y,2)+std::pow(loc_comz-z,2));
+		  Real r_a = std::sqrt(d2_a);
+		  Real r_b = std::sqrt(d2_b);
+		  
 		  Real cs_eq = c_sound_eq(r_com, r_a, r_b);
 	
 	      Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
