@@ -804,7 +804,7 @@ Real t_cool_function(Real den) //ARC density cooling function
 
 Real c_sound_eq(Real r_com, Real r_a, Real r_b) //ARC equilibrium sound speed function
 {
-	Real vk = std::sqrt(r_com*(GM2a/(r_a*r_a))) + std::sqrt(r_com*(GM2b/(r_b*r_b))); // before  =sqrt((Gm2a+GM2b)/r)
+	Real vk = std::sqrt(r_com*(GM2a/(r_a*r_a+rsoft2)) + r_com*(GM2b/(r_b*r_b+rsoft2))); // before  =sqrt((Gm2a+GM2b)/r)
 
 	Real cs_eq  = h*vk; 
 
