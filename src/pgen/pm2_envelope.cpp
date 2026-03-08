@@ -992,7 +992,10 @@ void TwoPointMass(MeshBlock *pmb, const Real time, const Real dt,  const AthenaA
 	
 	      Real P_eq = den*cs_eq*cs_eq / gamma_gas; 
 	      Real dP = (P_eq - prim(IPR,k,j,i))*(1.0 - exp(-(pmb->pmy_mesh->dt) / t_cool) );
-		  cons(IEN,k,j,i) +=  dP/(gamma_gas-1);
+		  if (dP<0.0){
+			  cons(IEN,k,j,i) +=  dP/(gamma_gas-1);
+		  }
+		  
 	  }
 	  //Real denr0 = pmb->pscalars->r(0,k,j,i) * den;
 	} // end coooling
